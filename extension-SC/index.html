@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Example ui plugin</title>
+  </head>
+
+  <body>
+    <div>
+      <h1>Example plugin UI</h1>
+      <h2 id="info"></h2>
+    </div>
+
+    <script src="https://unpkg.com/fsm-shell"></script>
+    <script>
+      const updateUI = (text) =>
+        (document.querySelectorAll('#info')[0].innerText = text);
+
+      const { ShellSdk, SHELL_EVENTS } = FSMShell;
+      console.log('using ShellSdk version', ShellSdk.VERSION);
+
+      if (!ShellSdk.isInsideShell()) {
+        throw new Error('unable to reach shell eventAPI');
+      }
+
+      const shellSdk = ShellSdk.init(parent, '*');
+
+      // get context
+      shellSdk.emit(SHELL_EVENTS.Version1.REQUIRE_CONTEXT, {
+        clientIdentifier: 'example-plugin',
+        auth: {
+          response_type: 'token'
+        }
+      });
+      shellSdk.on(SHELL_EVENTS.Version1.REQUIRE_CONTEXT, (event) => {
+        const {
+          account,
+          accountId,
+          company,
+          companyId,
+          user,
+          userId,
+          selectedLocale,
+          auth,
+          cloudHost
+        } = JSON.parse(event);
+        console.log(auth);
+        updateUI(`Hi ${user} / ${account} / ${company}!`);
+
+        fetch(`https://${cloudHost}/api/data/v4/ServiceCall/?dtos=ServiceCall.24&account=${account}&company=${company}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Client-ID': 'fsm-extension-sample',
+            'X-Client-Version': '1.0.0',
+            'Authorization': `bearer ${auth.access_token}`,
+          }
+        })
+          .then(response => response.json())
+          .then(function(json) {
+            console.log(json);
+            updateUI(`${document.querySelectorAll('#info')[0].innerText} / ${json.totalObjectCount} SC`);
+          });
+      });
+    </script>
+  </body>
+</html>
