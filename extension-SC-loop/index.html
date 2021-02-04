@@ -19,7 +19,7 @@
       const updateUI = (text) =>
         (document.querySelectorAll('#info')[0].innerText = text);
 
-      const fetchToken = (expires_in) {
+      const fetchToken = (expires_in) => {
         setTimeout(() => 
           shellSdk.emit(SHELL_EVENTS.Version1.REQUIRE_AUTHENTICATION, {
             response_type: 'token'
